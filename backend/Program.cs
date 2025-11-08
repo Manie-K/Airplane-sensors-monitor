@@ -2,6 +2,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+// Register the MQTT background service
+builder.Services.AddHostedService<AirplaneSensorsMonitor.Services.MqttBackgroundService>();
 
 var app = builder.Build();
 
