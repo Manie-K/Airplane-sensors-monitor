@@ -1,0 +1,48 @@
+﻿@page
+@model DashboardModel
+
+<h2>Sensor Data</h2>
+
+<form method="get">
+    <label>
+        Sensor Type:
+        <input type="text" name="sensorType" value="@Request.Query["sensorType"]" />
+    </label>
+    <label>
+        Sensor ID:
+        <input type="text" name="sensorId" value="@Request.Query["sensorId"]" />
+    </label>
+    <label>
+        Sort Descending:
+        <input type="checkbox" name="sortDescending" @(Request.Query["sortDescending"] == "true" ? "checked" : "") />
+    </label>
+    <button type="submit">Filter</button>
+</form>
+
+@if (Model.SensorMessages == null || !Model.SensorMessages.Any())
+{
+    <p>No messages received yet.</p>
+}
+
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Sensor Type</th>
+            <th>Sensor ID</th>
+            <th>Value</th>
+            <th>Timestamp</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var msg in Model.SensorMessages)
+        {
+            <tr>
+                <td>@msg.SensorType</td>
+                <td>@msg.SensorId</td>
+                <td>@msg.Value</td>
+                <td>@msg.Timestamp</td>
+            </tr>
+        }
+    </tbody>
+</table>
