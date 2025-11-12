@@ -1,10 +1,16 @@
+using AirplaneSensorsMonitor;
 using AirplaneSensorsMonitor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<MqttService>();
-// Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
+
+builder.Services.AddSingleton<MqttService>();
+builder.Services.AddHostedService(provider => provider.GetRequiredService<MqttService>());
+builder.Services.AddSingleton<SensorDataService>();
+// SignalR
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -24,5 +30,7 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
+app.MapControllers();
+app.MapHub<SensorDataHub>("/sensorDataHub"); // SingalR endpoint
 
 app.Run();

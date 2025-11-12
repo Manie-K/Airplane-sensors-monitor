@@ -1,24 +1,27 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.SignalR;
 using MQTTnet;
 using MQTTnet.Client;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AirplaneSensorsMonitor.Services
 {
-    public class MqttService
+    public class MqttService : BackgroundService
     {
         private readonly ILogger<MqttService> _logger;
-        private readonly ConcurrentQueue<SensorMessage> _messages = new();
+        private readonly ConcurrentQueue<SensorData> _messages = new();
         private IMqttClient? _mqttClient;
+        private readonly IHubContext<SensorDataHub> _hubContext;
 
-        public MqttService(ILogger<MqttService> logger)
+        public MqttService(ILogger<MqttService> logger, IHubContext<SensorDataHub> hubContext)
         {
             _logger = logger;
+            _hubContext = hubContext;
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
             var factory = new MqttFactory();
             _mqttClient = factory.CreateMqttClient();
 
@@ -37,7 +40,7 @@ namespace AirplaneSensorsMonitor.Services
 
                 if (parts.Length == 3 && double.TryParse(payloadString, NumberStyles.Any, CultureInfo.InvariantCulture, out double value))
                 {
-                    var sensorMessage = new SensorMessage
+                    var sensorMessage = new SensorData
                     {
                         SensorType = parts[1],
                         SensorId = parts[2],
@@ -47,6 +50,8 @@ namespace AirplaneSensorsMonitor.Services
 
                     _messages.Enqueue(sensorMessage);
                     _logger.LogInformation($"Received {sensorMessage.SensorType} ({sensorMessage.SensorId}) = {sensorMessage.Value}");
+
+                    await _hubContext.Clients.All.SendAsync("ReceiveSensorData", sensorMessage);
                 }
                 else
                 {
@@ -69,16 +74,16 @@ namespace AirplaneSensorsMonitor.Services
                 }
             };
 
-            _mqttClient.ConnectAsync(options, CancellationToken.None).Wait();
+            await _mqttClient.ConnectAsync(options, CancellationToken.None);
             //TODO: choose MQTT topics and quality of service level
-            _mqttClient.SubscribeAsync("sensors/#", MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce).Wait();
+            await _mqttClient.SubscribeAsync("sensors/#", MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce);
 
             _logger.LogInformation("Subscribed to sensors/#");
         }
 
-        public List<SensorMessage> GetMessages(string? sensorType = null, string? sensorId = null, bool sortDescending = false)
+        public List<SensorData> GetMessages(string? sensorType = null, string? sensorId = null, bool sortValueDescending = false, bool sortTimestampDescending = true)
         {
-            var list = _messages.ToList();
+            var list = _messages.Reverse().ToList();
 
             if (!string.IsNullOrEmpty(sensorType))
                 list = list.Where(m => m.SensorType == sensorType).ToList();
@@ -86,12 +91,28 @@ namespace AirplaneSensorsMonitor.Services
             if (!string.IsNullOrEmpty(sensorId))
                 list = list.Where(m => m.SensorId == sensorId).ToList();
 
-            list = sortDescending
+            list = sortValueDescending
+                ? list.OrderByDescending(m => m.Value).ToList()
+                : list.OrderBy(m => m.Value).ToList();
+
+            list = sortTimestampDescending
                 ? list.OrderByDescending(m => m.Value).ToList()
                 : list.OrderBy(m => m.Value).ToList();
 
             return list;
         }
 
+        public List<SensorData> GetLastMessagesBySensor(string sensorId, int count)
+        {
+            var lastMessages = _messages
+                .Reverse()                       
+                .Where(m => m.SensorId == sensorId)
+                .Take(count)                     
+                .ToList();
+
+            return lastMessages;
+        }
+
     }
+
 }

@@ -1,6 +1,6 @@
 ﻿namespace AirplaneSensorsMonitor
 {
-    public class SensorMessage
+    public class SensorData
     {
         public required string SensorType { get; set; }
         public required string SensorId { get; set; }
