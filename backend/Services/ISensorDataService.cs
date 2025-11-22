@@ -1,0 +1,35 @@
+﻿using AirplaneSensorsMonitor.Model;
+
+namespace AirplaneSensorsMonitor.Services
+{
+    public interface ISensorDataService
+    {
+        /// <summary>
+        /// Fetches sensor data with optional filtering and sorting.
+        /// </summary>
+        /// <param name="sensorId"></param>
+        /// <param name="sensorType"></param>
+        /// <param name="sortValueDescending"></param>
+        /// <param name="sortTimestampDescending"></param>
+        /// <returns></returns>
+        public IEnumerable<SensorData> GetSensorData(int? sensorId = null, string ? sensorType = null, bool sortValueDescending = false, bool sortTimestampDescending = true);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="format"></param>
+        /// <param name="sensorId"></param>
+        /// <param name="sensorType"></param>
+        /// <param name="sortValueDescending"></param>
+        /// <param name="sortTimestampDescending"></param>
+        /// <returns></returns>
+        public string ExportSensorData(string format, int? sensorId = null, string? sensorType = null, bool sortValueDescending = false, bool sortTimestampDescending = true);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="messagesPerSensorCount"></param>
+        /// <returns></returns>
+        public IEnumerable<SensorSummary> GetSensorSummaries(int messagesPerSensorCount = 100);
+    }
+}

@@ -6,10 +6,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 
-builder.Services.AddSingleton<MqttService>();
-builder.Services.AddHostedService(provider => provider.GetRequiredService<MqttService>());
-builder.Services.AddSingleton<SensorDataService>();
-// SignalR
+builder.Services.AddSingleton<IMqttService, MqttService>();
+builder.Services.AddSingleton<ISensorDataService, SensorDataService>();
+builder.Services.AddHostedService(provider => (IHostedService)provider.GetRequiredService<IMqttService>());
 builder.Services.AddSignalR();
 
 var app = builder.Build();

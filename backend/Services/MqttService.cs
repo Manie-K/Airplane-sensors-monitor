@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using AirplaneSensorsMonitor.Model;
+using Microsoft.AspNetCore.SignalR;
 using MQTTnet;
 using MQTTnet.Client;
 using System.Collections.Concurrent;
@@ -7,23 +8,25 @@ using System.Text;
 
 namespace AirplaneSensorsMonitor.Services
 {
-    public class MqttService : BackgroundService
+    public class MqttService : BackgroundService, IMqttService
     {
         private readonly ILogger<MqttService> _logger;
-        private readonly ConcurrentQueue<SensorData> _messages = new();
-        private IMqttClient? _mqttClient;
         private readonly IHubContext<SensorDataHub> _hubContext;
+        private readonly ConcurrentQueue<SensorData> _messages;
+        
+        private IMqttClient? _mqttClient;
 
         public MqttService(ILogger<MqttService> logger, IHubContext<SensorDataHub> hubContext)
         {
             _logger = logger;
             _hubContext = hubContext;
+
+            _messages = new ConcurrentQueue<SensorData>();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var factory = new MqttFactory();
-            _mqttClient = factory.CreateMqttClient();
+            _mqttClient = new MqttFactory().CreateMqttClient();
 
             var options = new MqttClientOptionsBuilder()
                 //TODO: When dockerizing, change "localhost" to the MQTT broker container name
@@ -43,7 +46,7 @@ namespace AirplaneSensorsMonitor.Services
                     var sensorMessage = new SensorData
                     {
                         SensorType = parts[1],
-                        SensorId = parts[2],
+                        SensorId = int.Parse(parts[2]),
                         Value = value,
                         Timestamp = DateTime.UtcNow
                     };
@@ -81,38 +84,38 @@ namespace AirplaneSensorsMonitor.Services
             _logger.LogInformation("Subscribed to sensors/#");
         }
 
-        public List<SensorData> GetMessages(string? sensorType = null, string? sensorId = null, bool sortValueDescending = false, bool sortTimestampDescending = true)
+        /// <inheritdoc/>
+        public IEnumerable<SensorData> GetMessages(int? sensorId = null, string? sensorType = null, bool sortValueDescending = false, bool sortTimestampDescending = true)
         {
-            var list = _messages.Reverse().ToList();
+            var list = _messages.Reverse();
 
             if (!string.IsNullOrEmpty(sensorType))
-                list = list.Where(m => m.SensorType == sensorType).ToList();
+                list = list.Where(m => m.SensorType == sensorType);
 
-            if (!string.IsNullOrEmpty(sensorId))
-                list = list.Where(m => m.SensorId == sensorId).ToList();
+            if (sensorId is not null)
+                list = list.Where(m => m.SensorId == sensorId);
 
             list = sortValueDescending
-                ? list.OrderByDescending(m => m.Value).ToList()
-                : list.OrderBy(m => m.Value).ToList();
+                ? list.OrderByDescending(m => m.Value)
+                : list.OrderBy(m => m.Value);
 
             list = sortTimestampDescending
-                ? list.OrderByDescending(m => m.Value).ToList()
-                : list.OrderBy(m => m.Value).ToList();
+                ? list.OrderByDescending(m => m.Timestamp)
+                : list.OrderBy(m => m.Timestamp);
 
             return list;
         }
 
-        public List<SensorData> GetLastMessagesBySensor(string sensorId, int count)
+        /// <inheritdoc/>
+        public IEnumerable<SensorData> GetLastMessagesBySensor(int sensorId, int count)
         {
             var lastMessages = _messages
-                .Reverse()                       
+                .Reverse()
                 .Where(m => m.SensorId == sensorId)
-                .Take(count)                     
-                .ToList();
+                .Take(count);
 
             return lastMessages;
         }
-
     }
 
 }
