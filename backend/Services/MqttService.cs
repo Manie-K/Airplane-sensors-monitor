@@ -12,16 +12,15 @@ namespace AirplaneSensorsMonitor.Services
     {
         private readonly ILogger<MqttService> _logger;
         private readonly IHubContext<SensorDataHub> _hubContext;
-        private readonly ConcurrentQueue<SensorData> _messages;
-        
+        private readonly IDataService dataService;
+
         private IMqttClient? _mqttClient;
 
-        public MqttService(ILogger<MqttService> logger, IHubContext<SensorDataHub> hubContext)
+        public MqttService(ILogger<MqttService> logger, IHubContext<SensorDataHub> hubContext, IDataService dataService)
         {
             _logger = logger;
             _hubContext = hubContext;
-
-            _messages = new ConcurrentQueue<SensorData>();
+            this.dataService = dataService;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,7 +42,7 @@ namespace AirplaneSensorsMonitor.Services
 
                 if (parts.Length == 3 && double.TryParse(payloadString, NumberStyles.Any, CultureInfo.InvariantCulture, out double value))
                 {
-                    var sensorMessage = new SensorData
+                    SensorData sensorMessage = new SensorData
                     {
                         SensorType = parts[1],
                         SensorId = int.Parse(parts[2]),
@@ -51,7 +50,8 @@ namespace AirplaneSensorsMonitor.Services
                         Timestamp = DateTime.UtcNow
                     };
 
-                    _messages.Enqueue(sensorMessage);
+                    await dataService.SaveDataAsync(sensorMessage);
+
                     _logger.LogInformation($"Received {sensorMessage.SensorType} ({sensorMessage.SensorId}) = {sensorMessage.Value}");
 
                     await _hubContext.Clients.All.SendAsync("ReceiveSensorData", sensorMessage);
@@ -82,39 +82,6 @@ namespace AirplaneSensorsMonitor.Services
             await _mqttClient.SubscribeAsync("sensors/#", MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce);
 
             _logger.LogInformation("Subscribed to sensors/#");
-        }
-
-        /// <inheritdoc/>
-        public IEnumerable<SensorData> GetMessages(int? sensorId = null, string? sensorType = null, bool sortValueDescending = false, bool sortTimestampDescending = true)
-        {
-            var list = _messages.Reverse();
-
-            if (!string.IsNullOrEmpty(sensorType))
-                list = list.Where(m => m.SensorType == sensorType);
-
-            if (sensorId is not null)
-                list = list.Where(m => m.SensorId == sensorId);
-
-            list = sortValueDescending
-                ? list.OrderByDescending(m => m.Value)
-                : list.OrderBy(m => m.Value);
-
-            list = sortTimestampDescending
-                ? list.OrderByDescending(m => m.Timestamp)
-                : list.OrderBy(m => m.Timestamp);
-
-            return list;
-        }
-
-        /// <inheritdoc/>
-        public IEnumerable<SensorData> GetLastMessagesBySensor(int sensorId, int count)
-        {
-            var lastMessages = _messages
-                .Reverse()
-                .Where(m => m.SensorId == sensorId)
-                .Take(count);
-
-            return lastMessages;
         }
     }
 

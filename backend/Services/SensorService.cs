@@ -5,45 +5,45 @@ using AirplaneSensorsMonitor.Model;
 
 namespace AirplaneSensorsMonitor.Services
 {
-    public class SensorDataService : ISensorDataService
+    public class SensorService : ISensorService
     {
-        private readonly IMqttService _mqttService;
+        private readonly IDataService _dataService;
 
-        public SensorDataService(IMqttService mqttService)
+        public SensorService(IDataService dataService)
         {
-            _mqttService = mqttService;
+            _dataService = dataService;
         }
 
         ///<inheritdoc/>
         public IEnumerable<SensorData> GetSensorData(int? sensorId = null, string? sensorType = null, bool sortValueDescending = false, bool sortTimestampDescending = true)
         {
-            return _mqttService.GetMessages(sensorId, sensorType, sortValueDescending, sortTimestampDescending);
+            return _dataService.GetAllData(sensorId, sensorType, sortValueDescending, sortTimestampDescending);
         }
 
         ///<inheritdoc/>
         public string ExportSensorData(string format, int? sensorId = null, string? sensorType = null, bool sortValueDescending = false, bool sortTimestampDescending = true)
         {
-            var messages = _mqttService.GetMessages(sensorId, sensorType, sortValueDescending, sortTimestampDescending);
+            var data = _dataService.GetAllData(sensorId, sensorType, sortValueDescending, sortTimestampDescending);
 
             return format.ToLower() switch
             {
-                "csv" => ExportToCsv(messages),
-                "json" => ExportToJson(messages),
+                "csv" => ExportToCsv(data),
+                "json" => ExportToJson(data),
                 _ => throw new ArgumentException("Nieobsługiwany format. Dostępne: csv, json")
             };
         }
 
         ///<inheritdoc/>
-        public IEnumerable<SensorSummary> GetSensorSummaries(int messagesPerSensorCount = 100)
+        public IEnumerable<SensorSummary> GetSensorSummaries(int rowsPerSensorCount = 100)
         {
-            var allMessages = _mqttService.GetMessages();
+            var allData = _dataService.GetAllData();
 
-            var summaries = allMessages
+            var summaries = allData
                 .GroupBy(m => m.SensorId)
                 .Select(g =>
                 {
                     var lastMessages = g.OrderByDescending(m => m.Timestamp)
-                                        .Take(messagesPerSensorCount)
+                                        .Take(rowsPerSensorCount)
                                         .ToList();
 
                     return new SensorSummary

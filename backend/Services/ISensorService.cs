@@ -2,7 +2,7 @@
 
 namespace AirplaneSensorsMonitor.Services
 {
-    public interface ISensorDataService
+    public interface ISensorService
     {
         /// <summary>
         /// Fetches sensor data with optional filtering and sorting.
@@ -28,8 +28,8 @@ namespace AirplaneSensorsMonitor.Services
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="messagesPerSensorCount"></param>
+        /// <param name="rowsPerSensorCount"></param>
         /// <returns></returns>
-        public IEnumerable<SensorSummary> GetSensorSummaries(int messagesPerSensorCount = 100);
+        public IEnumerable<SensorSummary> GetSensorSummaries(int rowsPerSensorCount = 100);
     }
 }

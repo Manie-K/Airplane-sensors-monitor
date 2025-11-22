@@ -22,5 +22,4 @@
         /// </summary>
         public DateTime Timestamp { get; set; }
     }
-
 }

@@ -8,9 +8,9 @@ namespace AirplaneSensorsMonitor.Controllers
     [Route("api/sensordata")]
     public class SensorDataController : ControllerBase
     {
-        private readonly ISensorDataService _sensorDataService;
+        private readonly ISensorService _sensorDataService;
 
-        public SensorDataController(ISensorDataService sensorDataService)
+        public SensorDataController(ISensorService sensorDataService)
         {
             _sensorDataService = sensorDataService;
         }
