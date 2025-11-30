@@ -7,7 +7,7 @@ namespace AirplaneSensorsMonitor.Data
     {
         [BsonId]
         [BsonElement("_id"), BsonRepresentation(BsonType.ObjectId)]
-        public int Id { get; set; }
+        public string? Id { get; set; }
 
         [BsonElement("sensor_id"), BsonRepresentation(BsonType.Int32)]
         public int SensorId { get; set; }
@@ -18,7 +18,7 @@ namespace AirplaneSensorsMonitor.Data
         [BsonElement("value"), BsonRepresentation(BsonType.Double)]
         public double Value { get; set; }
 
-        [BsonElement("timestamp"), BsonRepresentation(BsonType.Timestamp)]
+        [BsonElement("timestamp"), BsonRepresentation(BsonType.DateTime)]
         public DateTime Timestamp { get; set; }
     }
 }
