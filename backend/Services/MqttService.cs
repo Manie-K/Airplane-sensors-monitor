@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.SignalR;
 using MQTTnet;
 using MQTTnet.Client;
-using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 
 namespace AirplaneSensorsMonitor.Services
 {
@@ -13,14 +13,29 @@ namespace AirplaneSensorsMonitor.Services
         private readonly ILogger<MqttService> _logger;
         private readonly IHubContext<SensorDataHub> _hubContext;
         private readonly IDataService dataService;
+        private readonly string _mqttHost;
+        private readonly int _mqttPort;
+        private readonly string _topicFilter;
+        private readonly string _clientId;
+        private readonly TimeSpan _reconnectDelay;
 
         private IMqttClient? _mqttClient;
 
-        public MqttService(ILogger<MqttService> logger, IHubContext<SensorDataHub> hubContext, IDataService dataService)
+        public MqttService(
+            ILogger<MqttService> logger,
+            IHubContext<SensorDataHub> hubContext,
+            IDataService dataService,
+            IConfiguration configuration)
         {
             _logger = logger;
             _hubContext = hubContext;
             this.dataService = dataService;
+            _mqttHost = configuration.GetValue<string>("Mqtt:Host") ?? "localhost";
+            _mqttPort = configuration.GetValue<int?>("Mqtt:Port") ?? 1883;
+            _topicFilter = configuration.GetValue<string>("Mqtt:TopicFilter") ?? "sensors/#";
+            _clientId = configuration.GetValue<string>("Mqtt:ClientId") ?? $"razor-client-{Environment.MachineName}";
+            var reconnectSeconds = configuration.GetValue<int?>("Mqtt:ReconnectDelaySeconds") ?? 5;
+            _reconnectDelay = TimeSpan.FromSeconds(Math.Max(1, reconnectSeconds));
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -28,9 +43,12 @@ namespace AirplaneSensorsMonitor.Services
             _mqttClient = new MqttFactory().CreateMqttClient();
 
             var options = new MqttClientOptionsBuilder()
-                //TODO: When dockerizing, change "localhost" to the MQTT broker container name
-                .WithClientId("razor-client")
-                .WithTcpServer("localhost", 1883)
+                .WithClientId(_clientId)
+                .WithTcpServer(_mqttHost, _mqttPort)
+                .Build();
+            var topicFilter = new MqttTopicFilterBuilder()
+                .WithTopic(_topicFilter)
+                .WithAtMostOnceQoS()
                 .Build();
 
             _mqttClient.ApplicationMessageReceivedAsync += async e =>
@@ -66,7 +84,7 @@ namespace AirplaneSensorsMonitor.Services
             _mqttClient.DisconnectedAsync += async e =>
             {
                 _logger.LogWarning("MQTT disconnected. Reconnecting...");
-                await Task.Delay(TimeSpan.FromSeconds(5));
+                await Task.Delay(_reconnectDelay, stoppingToken);
                 try 
                 { 
                     await _mqttClient.ConnectAsync(options, CancellationToken.None); 
@@ -77,11 +95,28 @@ namespace AirplaneSensorsMonitor.Services
                 }
             };
 
-            await _mqttClient.ConnectAsync(options, CancellationToken.None);
-            //TODO: choose MQTT topics and quality of service level
-            await _mqttClient.SubscribeAsync("sensors/#", MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce);
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await _mqttClient.ConnectAsync(options, stoppingToken);
+                    await _mqttClient.SubscribeAsync(topicFilter, stoppingToken);
+                    _logger.LogInformation("Subscribed to {Topic}", _topicFilter);
+                    break;
+                }
+                catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+                {
+                    _logger.LogError(ex, "Unable to connect to MQTT at {Host}:{Port}. Retrying in {Delay}s", _mqttHost, _mqttPort, _reconnectDelay.TotalSeconds);
+                    await Task.Delay(_reconnectDelay, stoppingToken);
+                }
+            }
 
-            _logger.LogInformation("Subscribed to sensors/#");
+            if (stoppingToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            _logger.LogInformation("MQTT client running with host {Host}:{Port}", _mqttHost, _mqttPort);
         }
     }
 

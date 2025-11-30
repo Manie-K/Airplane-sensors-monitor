@@ -58,7 +58,7 @@ namespace AirplaneSensorsMonitor.Services
                 .Select(x => new SensorData
                 {
                     SensorId = x.SensorId,
-                    SensorType = x.SensorType,
+                    SensorType = x.SensorType ?? string.Empty,
                     Value = x.Value,
                     Timestamp = x.Timestamp
                 });
@@ -80,7 +80,7 @@ namespace AirplaneSensorsMonitor.Services
                 .Select(x => new SensorData
                 {
                     SensorId = x.SensorId,
-                    SensorType = x.SensorType,
+                    SensorType = x.SensorType ?? string.Empty,
                     Value = x.Value,
                     Timestamp = x.Timestamp
                 });
