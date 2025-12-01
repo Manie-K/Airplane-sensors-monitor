@@ -45,11 +45,12 @@ services:
       dockerfile: dataGenerator/Dockerfile
     environment:
       PYTHONUNBUFFERED: "1"
-      HOST: host.docker.internal
-      PORT: 5000
-      DATA_MIN: 1
+      HOST: mosquitto
+      PORT: 1883
+      DATA_MIN: 0
       DATA_MAX: 100
-      INTERVAL: 2
+      INTERVAL: 1.0
+      SENSOR_ID: test-generator
     deploy:
       replicas: 1
 

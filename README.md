@@ -27,8 +27,8 @@ To stop the stack, use `Ctrl+C`, then `docker compose down` to free resources (M
 | `Mqtt__TopicFilter` | Topic filter the backend subscribes to | `sensors/#` |
 | `HOST` / `PORT` | Target host/port for the generator | `mosquitto` / `1883` |
 | `DATA_MIN` / `DATA_MAX` | Range of generated values | `0` / `100` |
-| `INTERVAL` | Publish interval in seconds | `1.5` |
-| `SENSOR_ID` | Sensor identifier included in payloads | `compose-generator` |
+| `INTERVAL` | Publish interval in seconds | `1.0` |
+| `SENSOR_ID` | Sensor identifier included in payloads | `test-generator` |
 
 ## Container Topology
 
