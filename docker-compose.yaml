@@ -57,7 +57,8 @@ services:
 
   datagenerator:
     build:
-      context: ./dataGenerator
+      context: .
+      dockerfile: dataGenerator/Dockerfile
     environment:
       PYTHONUNBUFFERED: "1" # Immediate console output
       HOST: host.docker.internal # subject to change when targeting remote broker
