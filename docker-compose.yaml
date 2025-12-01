@@ -39,35 +39,19 @@ services:
       - mosquitto-data:/mosquitto/data
       - mosquitto-log:/mosquitto/log
 
-  data-generator:
-    build:
-      context: .
-      dockerfile: dataGenerator/Dockerfile
-    image: airplane-sensors-generator
-    environment:
-      HOST: mosquitto
-      PORT: 1883
-      DATA_MIN: 0
-      DATA_MAX: 100
-      INTERVAL: 1.5
-      SENSOR_ID: compose-generator
-    depends_on:
-      - mosquitto
-    restart: unless-stopped
-
   datagenerator:
     build:
       context: .
       dockerfile: dataGenerator/Dockerfile
     environment:
-      PYTHONUNBUFFERED: "1" # Immediate console output
-      HOST: host.docker.internal # subject to change when targeting remote broker
+      PYTHONUNBUFFERED: "1"
+      HOST: host.docker.internal
       PORT: 5000
       DATA_MIN: 1
       DATA_MAX: 100
       INTERVAL: 2
     deploy:
-      replicas: 4
+      replicas: 1
 
 volumes:
   mongo-data:
