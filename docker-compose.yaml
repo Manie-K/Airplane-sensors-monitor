@@ -39,7 +39,7 @@ services:
       - mosquitto-data:/mosquitto/data
       - mosquitto-log:/mosquitto/log
 
-  datagenerator:
+  co2-datagenerator:
     build:
       context: .
       dockerfile: dataGenerator/Dockerfile
@@ -47,13 +47,73 @@ services:
       PYTHONUNBUFFERED: "1"
       HOST: mosquitto
       PORT: 1883
-      DATA_MIN: 0
-      DATA_MAX: 100
+      DATA_MIN: 400
+      DATA_MAX: 1200
       INTERVAL: 1.0
       SENSOR_ID: "1"
-      SENSOR_TYPE: test-generator
+      SENSOR_TYPE: CO2
     deploy:
       replicas: 1
+    depends_on:
+      - mosquitto
+      - backend
+
+  temp-datagenerator:
+    build:
+      context: .
+      dockerfile: dataGenerator/Dockerfile
+    environment:
+      PYTHONUNBUFFERED: "1"
+      HOST: mosquitto
+      PORT: 1883
+      DATA_MIN: 15
+      DATA_MAX: 35
+      INTERVAL: 1.0
+      SENSOR_ID: "1"
+      SENSOR_TYPE: TEMPERATURE
+    deploy:
+      replicas: 1
+    depends_on:
+      - mosquitto
+      - backend
+
+  press-datagenerator:
+    build:
+      context: .
+      dockerfile: dataGenerator/Dockerfile
+    environment:
+      PYTHONUNBUFFERED: "1"
+      HOST: mosquitto
+      PORT: 1883
+      DATA_MIN: 980
+      DATA_MAX: 1020
+      INTERVAL: 1.0
+      SENSOR_ID: "1"
+      SENSOR_TYPE: PRESSURE
+    deploy:
+      replicas: 1
+    depends_on:
+      - mosquitto
+      - backend
+
+  humi-datagenerator:
+    build:
+      context: .
+      dockerfile: dataGenerator/Dockerfile
+    environment:
+      PYTHONUNBUFFERED: "1"
+      HOST: mosquitto
+      PORT: 1883
+      DATA_MIN: 30
+      DATA_MAX: 80
+      INTERVAL: 1.0
+      SENSOR_ID: "1"
+      SENSOR_TYPE: HUMIDITY
+    deploy:
+      replicas: 1
+    depends_on:
+      - mosquitto
+      - backend
 
 volumes:
   mongo-data:

@@ -1,10 +1,8 @@
 import os
 import time
-import random
 import datetime
-import socket
 import paho.mqtt.client as mqtt
-
+import random
 
 class EnvLoader:
     def __init__(self):
@@ -13,22 +11,22 @@ class EnvLoader:
         self.data_min = float(os.environ.get("DATA_MIN", "0"))
         self.data_max = float(os.environ.get("DATA_MAX", "100"))
         self.interval = float(os.environ.get("INTERVAL", "1.0"))
-        self.sensor_id = os.environ.get("SENSOR_ID", "0")
         self.sensor_type = os.environ.get("SENSOR_TYPE", "test-sensor")
+        self.host_id = random.randint(1, 10_000_000)
 
 
 class Logger:
     @staticmethod
     def info(message: str):
-        print(f"[{datetime.datetime.now().strftime('%H:%M:%S.%f')[:-3]}] [INFO] {message}")
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S.%f')[:-3]}] [INFO] {message}", flush=True)
 
     @staticmethod
     def warning(message: str):
-        print(f"[{datetime.datetime.now().strftime('%H:%M:%S.%f')[:-3]}] [WARN]  {message}")
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S.%f')[:-3]}] [WARN]  {message}", flush=True)
 
     @staticmethod
     def error(message: str):
-        print(f"[{datetime.datetime.now().strftime('%H:%M:%S.%f')[:-3]}] [ERROR] {message}")
+        print(f"[{datetime.datetime.now().strftime('%H:%M:%S.%f')[:-3]}] [ERROR] {message}", flush=True)
 
 
 class DataGenerator:
@@ -37,7 +35,7 @@ class DataGenerator:
         self.config = config
         self.log = logger
         self.client = mqtt.Client()
-        self.topic = f"sensors/{self.config.sensor_type}/{self.config.sensor_id}"
+        self.topic = f"sensors/{self.config.sensor_type}/{self.config.host_id}"
 
     def generate_value(self) -> float:
         return random.uniform(self.config.data_min, self.config.data_max)
@@ -55,7 +53,7 @@ class DataGenerator:
                     value = round(self.generate_value(), 2)
                     self.client.publish(self.topic, str(value))
 
-                    self.log.info(f"PUBLISHED {self.topic}: {value}")
+                    self.log.info(f"{self.config.host_id}: PUBLISHED {self.topic}: {value}")
 
                     time.sleep(self.config.interval)
 
