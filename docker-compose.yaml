@@ -50,7 +50,8 @@ services:
       DATA_MIN: 0
       DATA_MAX: 100
       INTERVAL: 1.0
-      SENSOR_ID: test-generator
+      SENSOR_ID: "1"
+      SENSOR_TYPE: test-generator
     deploy:
       replicas: 1
 
