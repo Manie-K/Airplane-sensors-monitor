@@ -18,7 +18,7 @@ namespace AirplaneSensorsMonitor.Services
         /// <param name="sortValueDescending">Sort by value in descending order</param>
         /// <param name="sortTimestampDescending">Sort by timestamp in descending order</param>
         /// <returns>All sensor data saved in database taking filers into account</returns>
-        public IEnumerable<SensorData> GetAllData(int? sensorId = null, string? sensorType = null, bool sortValueDescending = false, bool sortTimestampDescending = true);
+        public IEnumerable<SensorData> GetAllData(int? sensorId = null, string? sensorType = null, bool? sortValueDescending = null, bool? sortTimestampDescending = null, DateTime ? startDate = null, DateTime? endDate = null);
 
         /// <summary>
         /// Retrieves sensor data for a specific sensor ID limited to a certain count.

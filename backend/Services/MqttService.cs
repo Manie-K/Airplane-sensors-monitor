@@ -13,6 +13,7 @@ namespace AirplaneSensorsMonitor.Services
         private readonly ILogger<MqttService> _logger;
         private readonly IHubContext<SensorDataHub> _hubContext;
         private readonly IDataService dataService;
+        private readonly ISensorService sensorService;
         private readonly string _mqttHost;
         private readonly int _mqttPort;
         private readonly string _topicFilter;
@@ -25,11 +26,13 @@ namespace AirplaneSensorsMonitor.Services
             ILogger<MqttService> logger,
             IHubContext<SensorDataHub> hubContext,
             IDataService dataService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ISensorService sensorService)
         {
             _logger = logger;
             _hubContext = hubContext;
             this.dataService = dataService;
+            this.sensorService = sensorService;
             _mqttHost = configuration.GetValue<string>("Mqtt:Host") ?? "localhost";
             _mqttPort = configuration.GetValue<int?>("Mqtt:Port") ?? 1883;
             _topicFilter = configuration.GetValue<string>("Mqtt:TopicFilter") ?? "sensors/#";
@@ -73,6 +76,7 @@ namespace AirplaneSensorsMonitor.Services
                     _logger.LogInformation($"Received {sensorMessage.SensorType} ({sensorMessage.SensorId}) = {sensorMessage.Value}");
 
                     await _hubContext.Clients.All.SendAsync("ReceiveSensorData", sensorMessage);
+                    await _hubContext.Clients.All.SendAsync("ReceiveSensorSummary", sensorService.GetSensorSummaries().ToList());
                 }
                 else
                 {
@@ -80,7 +84,7 @@ namespace AirplaneSensorsMonitor.Services
                 }
                 await Task.CompletedTask;
             };
-
+                
             _mqttClient.DisconnectedAsync += async e =>
             {
                 _logger.LogWarning("MQTT disconnected. Reconnecting...");

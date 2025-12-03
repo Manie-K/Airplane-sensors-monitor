@@ -1,1 +1,259 @@
-﻿
+﻿@page
+@model AirplaneSensorsMonitor.Pages.DashboardModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container-fluid">
+    <h1 class="mt-4">Sensor Dashboard</h1>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-filter me-1"></i>
+            Filters
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="SensorType" class="form-label">Sensor Type</label>
+                    <input type="text" class="form-control" id="SensorType" name="SensorType" value="@Model.SensorType" placeholder="e.g. Temperature">
+                </div>
+                <div class="col-md-2">
+                    <label for="SensorId" class="form-label">Sensor ID</label>
+                    <input type="number" class="form-control" id="SensorId" name="SensorId" value="@Model.SensorId" placeholder="e.g. 1">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Sort By</label>
+                    <select name="SortBy" class="form-select">
+                        <option value="TimeDesc" selected="@(Model.SortBy == "TimeDesc")">Time (Newest)</option>
+                        <option value="TimeAsc" selected="@(Model.SortBy == "TimeAsc")">Time (Oldest)</option>
+                        <option value="ValueDesc" selected="@(Model.SortBy == "ValueDesc")">Value (High-Low)</option>
+                        <option value="ValueAsc" selected="@(Model.SortBy == "ValueAsc")">Value (Low-High)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="StartDate" class="form-label">Start Date</label>
+                    <input type="datetime-local" class="form-control" id="StartDate" name="StartDate" value="@(Model.StartDate?.ToString("yyyy-MM-ddTHH:mm"))">
+                </div>
+                <div class="col-md-3">
+                    <label for="EndDate" class="form-label">End Date</label>
+                    <input type="datetime-local" class="form-control" id="EndDate" name="EndDate" value="@(Model.EndDate?.ToString("yyyy-MM-ddTHH:mm"))">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Filter</button>
+                    <a asp-page="./Dashboard" class="btn btn-secondary me-2">Reset</a>
+                    <div class="btn-group">
+                        <button type="submit" formaction="/api/Export/csv" class="btn btn-outline-success">CSV</button>
+                        <button type="submit" formaction="/api/Export/json" class="btn btn-outline-success">JSON</button>
+                    </div>
+                </div>
+
+                <input type="hidden" asp-for="Paused" />
+                <button id="pauseButton" type="button" class="btn btn-warning">
+                    @(Model.Paused ? "Resume" : "Pause")
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-4" id="summaries-container">
+        @foreach (var summary in Model.SensorSummaries)
+        {
+        <div class="col-xl-3 col-md-6 mb-4 sensor-card" data-sensor-id="@summary.SensorId">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                @summary.SensorType (ID: @summary.SensorId)
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                Last: <span class="last-value">@summary.LastValue.ToString("F2")</span>
+                            </div>
+                            <div class="text-xs text-muted">
+                                Avg (100): <span class="avg-value">@summary.AverageValue.ToString("F2")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-chart-area me-1"></i>
+            Live Data Chart
+        </div>
+        <div class="card-body">
+            <div style="height: 400px; width: 100%;">
+                <canvas id="sensorChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-table me-1"></i>
+            Sensor Data
+        </div>
+        <div class="card-body">
+            <table class="table table-striped" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Type</th>
+                        <th>ID</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.SensorData)
+                    {
+                    <tr>
+                        <td>@item.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        <td>@item.SensorType</td>
+                        <td>@item.SensorId</td>
+                        <td>@item.Value.ToString("F2")</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+    <script>
+
+        var pauseInput = document.getElementById("Paused");
+
+        var paused = pauseInput.value.toLowerCase() === "true";
+
+        var pauseButton = document.getElementById("pauseButton");
+        pauseButton.innerText = paused ? "Resume" : "Pause";
+
+        pauseButton.addEventListener("click", function (e) {
+            e.preventDefault();
+            paused = !paused;
+
+            pauseInput.value = paused.toString();
+
+            this.innerText = paused ? "Resume" : "Pause";
+        });
+
+        var ctx = document.getElementById("sensorChart");
+        var myLineChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // Time labels
+                datasets: [{
+                    label: "Sensor Value",
+                    lineTension: 0.3,
+                    backgroundColor: "rgba(78, 115, 223, 0.05)",
+                    borderColor: "rgba(78, 115, 223, 1)",
+                    pointRadius: 3,
+                    pointBackgroundColor: "rgba(78, 115, 223, 1)",
+                    pointBorderColor: "rgba(78, 115, 223, 1)",
+                    pointHoverRadius: 3,
+                    pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+                    pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+                    pointHitRadius: 10,
+                    pointBorderWidth: 2,
+                    data: [], // Data points
+                }],
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    xAxes: [{
+                        time: { unit: 'date' },
+                        gridLines: { display: false, drawBorder: false },
+                        ticks: { maxTicksLimit: 7 }
+                    }],
+                    yAxes: [{
+                        ticks: { maxTicksLimit: 5, padding: 10 },
+                        gridLines: { color: "rgb(234, 236, 244)", zeroLineColor: "rgb(234, 236, 244)", drawBorder: false, borderDash: [2], zeroLineBorderDash: [2] }
+                    }],
+                },
+                legend: { display: false },
+                tooltips: {
+                    backgroundColor: "rgb(255,255,255)",
+                    bodyFontColor: "#858796",
+                    titleMarginBottom: 10,
+                    titleFontColor: '#6e707e',
+                    titleFontSize: 14,
+                    borderColor: '#dddfeb',
+                    borderWidth: 1,
+                    xPadding: 15,
+                    yPadding: 15,
+                    displayColors: false,
+                    intersect: false,
+                    mode: 'index',
+                    caretPadding: 10,
+                }
+            }
+        });
+
+        var connection = new signalR.HubConnectionBuilder().withUrl("/sensorDataHub").build();
+
+        connection.on("ReceiveSensorData", function (data) {
+            if (paused) return;
+            var sensorTypeFilter = document.getElementById("SensorType").value;
+            var sensorIdFilter = document.getElementById("SensorId").value;
+            var startDateFilter = document.getElementById("StartDate").value;
+            var endDateFilter = document.getElementById("EndDate").value;
+
+            var dataDate = new Date(data.timestamp);
+
+            if ((sensorTypeFilter && data.sensorType !== sensorTypeFilter) ||
+                (sensorIdFilter && data.sensorId != sensorIdFilter) ||
+                (startDateFilter && dataDate < new Date(startDateFilter)) ||
+                (endDateFilter && dataDate > new Date(endDateFilter + "T23:59:59"))) {
+                return;
+            }
+
+            var table = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
+            var row = table.insertRow(0);
+            var date = new Date(data.timestamp);
+            row.innerHTML = `<td>${date.toLocaleString()}</td><td>${data.sensorType}</td><td>${data.sensorId}</td><td>${data.value.toFixed(2)}</td>`;
+
+            if (table.rows.length > 100) table.deleteRow(100);
+
+            var now = new Date().toLocaleTimeString();
+            myLineChart.data.labels.push(now);
+            myLineChart.data.datasets[0].data.push(data.value);
+
+            if (myLineChart.data.labels.length > 20) {
+                myLineChart.data.labels.shift();
+                myLineChart.data.datasets[0].data.shift();
+            }
+            myLineChart.update();
+        });
+
+
+        connection.on("ReceiveSensorSummary", function (summaries) {
+            if (paused) return;
+            summaries.forEach(function (summary) {
+                var sensorId = summary.sensorId;
+                var lastValue = summary.lastValue;
+                var averageValue = summary.averageValue;
+
+                var card = document.querySelector(`.sensor-card[data-sensor-id='${sensorId}']`);
+                if (card && lastValue != null && averageValue != null) {
+                    card.querySelector('.last-value').innerText = lastValue.toFixed(2);
+                    card.querySelector('.avg-value').innerText = averageValue.toFixed(2);
+                }
+            });
+        });
+
+        connection.start().catch(function (err) {
+            return console.error(err.toString());
+        });
+
+    </script>
+}

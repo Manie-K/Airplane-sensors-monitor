@@ -1,0 +1,7 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+WORKDIR /src
+
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+CMD ["dotnet", "watch", "run", "--project", "backend/AirplaneSensorsMonitor.csproj", "--urls", "http://0.0.0.0:5292"]
