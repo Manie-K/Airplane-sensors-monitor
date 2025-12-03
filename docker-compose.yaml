@@ -39,6 +39,24 @@ services:
       - mosquitto-data:/mosquitto/data
       - mosquitto-log:/mosquitto/log
 
+  blockchain:
+    image: trufflesuite/ganache
+    container_name: ganache
+    ports:
+      - "8545:8545"
+    command:
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8545"
+      - "--accounts"
+      - "10"
+      - "--deterministic"
+    depends_on:
+      - mongo
+      - mosquitto
+    restart: unless-stopped
+
   co2-datagenerator:
     build:
       context: .
