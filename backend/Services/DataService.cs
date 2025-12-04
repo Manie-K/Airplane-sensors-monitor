@@ -1,6 +1,7 @@
 ﻿using AirplaneSensorsMonitor.Data;
 using AirplaneSensorsMonitor.Model;
 using MongoDB.Driver;
+using SharpCompress.Common;
 
 namespace AirplaneSensorsMonitor.Services
 {
@@ -78,7 +79,7 @@ namespace AirplaneSensorsMonitor.Services
                     SensorId = x.SensorId,
                     SensorType = x.SensorType ?? string.Empty,
                     Value = x.Value,
-                    Timestamp = x.Timestamp
+                    Timestamp = DateTime.SpecifyKind(x.Timestamp, DateTimeKind.Utc)
                 });
 
             return results;
@@ -100,7 +101,7 @@ namespace AirplaneSensorsMonitor.Services
                     SensorId = x.SensorId,
                     SensorType = x.SensorType ?? string.Empty,
                     Value = x.Value,
-                    Timestamp = x.Timestamp
+                    Timestamp = DateTime.SpecifyKind(x.Timestamp, DateTimeKind.Utc)
                 });
 
             return results;

@@ -23,7 +23,32 @@ namespace AirplaneSensorsMonitor.Services
             _privateKey = configuration.GetValue<string>("Blockchain:PrivateKey") ?? throw new ArgumentNullException("Private key is not configured.");
             _contractAddress = configuration.GetValue<string>("Blockchain:ContractAddress") ?? throw new ArgumentNullException("Contract address is not configured.");
 
-            _abi = File.Exists("Blockchain:PathToAbi") ? File.ReadAllText("Blockchain:PathToAbi") : throw new FileNotFoundException("Contract ABI file not found.");
+            //_abi = File.Exists("Blockchain:PathToAbi") ? File.ReadAllText("Blockchain:PathToAbi") : throw new FileNotFoundException("Contract ABI file not found.");
+            _abi = @"[
+  {
+    ""inputs"": [
+      { ""internalType"": ""address"", ""name"": ""to"", ""type"": ""address"" },
+      { ""internalType"": ""uint256"", ""name"": ""amount"", ""type"": ""uint256"" }
+    ],
+    ""name"": ""mint"",
+    ""outputs"": [],
+    ""stateMutability"": ""nonpayable"",
+    ""type"": ""function""
+  },
+  {
+    ""inputs"": [
+      { ""internalType"": ""address"", ""name"": ""account"", ""type"": ""address"" }
+    ],
+    ""name"": ""balanceOf"",
+    ""outputs"": [
+      { ""internalType"": ""uint256"", ""name"": """", ""type"": ""uint256"" }
+    ],
+    ""stateMutability"": ""view"",
+    ""type"": ""function""
+  }
+]";
+
+
             _wallets = new Dictionary<int, string>(16);
 
             var account = new Account(_privateKey, new BigInteger(1337));
@@ -38,8 +63,13 @@ namespace AirplaneSensorsMonitor.Services
             {
                 var contract = _web3.Eth.GetContract(_abi, _contractAddress);
                 var balanceFunction = contract.GetFunction(BALANCE_OF_FUNCTION);
-                var balanceWei = await balanceFunction.CallAsync<BigInteger>(address);
-                return Web3.Convert.FromWei(balanceWei);
+                
+                BigInteger balanceWei = await balanceFunction.CallAsync<BigInteger>(address);
+                decimal balance = Web3.Convert.FromWei(balanceWei);
+
+                Console.WriteLine($"[INFO]: Balance for sensor {sensorId} ({address}) is {balance} tokens.");
+
+                return balance;
             }
             catch (Exception ex)
             {
@@ -70,6 +100,7 @@ namespace AirplaneSensorsMonitor.Services
                 };
 
                 var receipt = await _web3.TransactionManager.SendTransactionAsync(transactionInput);
+                Console.WriteLine($"[INFO]: Rewarded sensor {sensorId} ({address}) with {amount} tokens. Txn Hash: {receipt}");
             }
             catch (Exception ex)
             {
@@ -84,13 +115,13 @@ namespace AirplaneSensorsMonitor.Services
         /// <returns>Adress (string)</returns>
         private string GetSensorAddress(int sensorId)
         {
-            if (_wallets.TryGetValue(sensorId, out var address))
+            if (_wallets.TryGetValue(sensorId, out string? address))
             {
-                return address;
+                return address!;
             }
 
             var ecKey = Nethereum.Signer.EthECKey.GenerateKey(System.Text.Encoding.UTF8.GetBytes($"Sensor-{sensorId}"));
-            var newAddr = ecKey.GetPublicAddress();
+            string newAddr = ecKey.GetPublicAddress();
             _wallets[sensorId] = newAddr;
 
             return newAddr;

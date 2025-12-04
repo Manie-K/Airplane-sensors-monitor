@@ -19,6 +19,7 @@ namespace AirplaneSensorsMonitor.Data
         public double Value { get; set; }
 
         [BsonElement("timestamp"), BsonRepresentation(BsonType.DateTime)]
+        [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
         public DateTime Timestamp { get; set; }
     }
 }

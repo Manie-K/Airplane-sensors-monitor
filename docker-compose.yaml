@@ -14,9 +14,9 @@ services:
       Mqtt__ClientId: razor-client-compose
       Blockchain__TokenRewardAmount: 10
       Blockchain__RpcUrl: http://blockchain:8545
-      Blockchain__PrivateKey: YOUR_PRIVATE_KEY_HERE
-      Blockchain__ContractAddress: YOUR_CONTRACT_ADDRESS_HERE
-      Blochchain__PathToAbi: /app/abi/SensorToken.json
+      Blockchain__PrivateKey: 0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3
+      Blockchain__ContractAddress: 0x8CdaF0CD259887258Bc13a92C0a6dA92698644C0
+      Blochchain__PathToAbi: /app/blockchain/contract/SensorToken.abi
     ports:
       - "8080:8080"
     depends_on:
@@ -49,11 +49,7 @@ services:
     container_name: ganache
     ports:
       - "8545:8545"
-    command:
-      - "--host"
-      - "0.0.0.0"
-      - "--port"
-      - "8545"
+    command: --wallet.mnemonic "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat" --wallet.totalAccounts 1
     depends_on:
       - mongo
       - mosquitto
@@ -73,7 +69,7 @@ services:
       SENSOR_ID: "1"
       SENSOR_TYPE: CO2
     deploy:
-      replicas: 1
+      replicas: 3
     depends_on:
       - mosquitto
       - backend
@@ -92,7 +88,7 @@ services:
       SENSOR_ID: "1"
       SENSOR_TYPE: TEMPERATURE
     deploy:
-      replicas: 1
+      replicas: 3
     depends_on:
       - mosquitto
       - backend
@@ -111,7 +107,7 @@ services:
       SENSOR_ID: "1"
       SENSOR_TYPE: PRESSURE
     deploy:
-      replicas: 1
+      replicas: 3
     depends_on:
       - mosquitto
       - backend
@@ -130,7 +126,7 @@ services:
       SENSOR_ID: "1"
       SENSOR_TYPE: HUMIDITY
     deploy:
-      replicas: 1
+      replicas: 3
     depends_on:
       - mosquitto
       - backend
