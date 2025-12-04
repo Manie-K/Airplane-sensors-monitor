@@ -7,6 +7,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 
 builder.Services.AddSingleton<ISensorService, SensorService>();
+builder.Services.AddSingleton<ISensorTokenService, SensorTokenService>();
 builder.Services.AddSingleton<IDataService, DataService>();
 builder.Services.AddSingleton<MqttService>();
 builder.Services.AddSingleton<IMqttService>(sp => sp.GetRequiredService<MqttService>());

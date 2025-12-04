@@ -14,11 +14,13 @@ namespace AirplaneSensorsMonitor.Services
         private readonly IHubContext<SensorDataHub> _hubContext;
         private readonly IDataService dataService;
         private readonly ISensorService sensorService;
+        private readonly ISensorTokenService sensorTokenService;
         private readonly string _mqttHost;
         private readonly int _mqttPort;
         private readonly string _topicFilter;
         private readonly string _clientId;
         private readonly TimeSpan _reconnectDelay;
+        private readonly decimal _rewardAmount;
 
         private IMqttClient? _mqttClient;
 
@@ -27,16 +29,23 @@ namespace AirplaneSensorsMonitor.Services
             IHubContext<SensorDataHub> hubContext,
             IDataService dataService,
             IConfiguration configuration,
-            ISensorService sensorService)
+            ISensorService sensorService,
+            ISensorTokenService sensorTokenService)
         {
             _logger = logger;
             _hubContext = hubContext;
+            
             this.dataService = dataService;
             this.sensorService = sensorService;
+            this.sensorTokenService = sensorTokenService;
+
             _mqttHost = configuration.GetValue<string>("Mqtt:Host") ?? "localhost";
             _mqttPort = configuration.GetValue<int?>("Mqtt:Port") ?? 1883;
             _topicFilter = configuration.GetValue<string>("Mqtt:TopicFilter") ?? "sensors/#";
             _clientId = configuration.GetValue<string>("Mqtt:ClientId") ?? $"razor-client-{Environment.MachineName}";
+
+            _rewardAmount = configuration.GetValue<decimal?>("Blockchain:TokenRewardAmount") ?? 5m;
+
             var reconnectSeconds = configuration.GetValue<int?>("Mqtt:ReconnectDelaySeconds") ?? 5;
             _reconnectDelay = TimeSpan.FromSeconds(Math.Max(1, reconnectSeconds));
         }
@@ -72,6 +81,7 @@ namespace AirplaneSensorsMonitor.Services
                     };
 
                     await dataService.SaveDataAsync(sensorMessage);
+                    await sensorTokenService.RewardSensorAsync(sensorMessage.SensorId, _rewardAmount);
 
                     _logger.LogInformation($"Received {sensorMessage.SensorType} ({sensorMessage.SensorId}) = {sensorMessage.Value}");
 
