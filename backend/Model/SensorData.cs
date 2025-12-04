@@ -21,5 +21,10 @@
         /// Date and time when the value was recorded
         /// </summary>
         public DateTime Timestamp { get; set; }
+
+        /// <summary>
+        /// Sensor balance
+        /// </summary>
+        public decimal? Balance { get; set; }
     }
 }

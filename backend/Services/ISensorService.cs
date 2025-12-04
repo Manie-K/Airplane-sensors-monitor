@@ -31,5 +31,7 @@ namespace AirplaneSensorsMonitor.Services
         /// <param name="rowsPerSensorCount"></param>
         /// <returns></returns>
         public IEnumerable<SensorSummary> GetSensorSummaries(int? sensorId = null, string? sensorType = null, bool? sortValueDescending = null, bool? sortTimestampDescending = null, DateTime? startDate = null, DateTime? endDate = null, int rowsPerSensorCount = 100);
+
+        public IEnumerable<SensorData> GetAvailableSensors();
     }
 }

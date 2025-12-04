@@ -16,5 +16,7 @@
         /// <param name="amount">Amount to reward.</param>
         /// <returns></returns>
         public Task RewardSensorAsync(int sensorId, decimal amount);
+
+        public string GetSensorAddress(int sensorId);
     }
 }

@@ -113,7 +113,7 @@ namespace AirplaneSensorsMonitor.Services
         /// </summary>
         /// <param name="sensorId">ID of the sensor</param>
         /// <returns>Adress (string)</returns>
-        private string GetSensorAddress(int sensorId)
+        public string GetSensorAddress(int sensorId)
         {
             if (_wallets.TryGetValue(sensorId, out string? address))
             {

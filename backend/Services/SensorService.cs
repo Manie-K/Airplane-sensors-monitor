@@ -58,6 +58,15 @@ namespace AirplaneSensorsMonitor.Services
             return summaries;
         }
 
+        public IEnumerable<SensorData> GetAvailableSensors()
+        {
+            var allData = _dataService.GetAllData();
+
+            return allData
+                .GroupBy(s => s.SensorId)
+                .Select(g => g.OrderByDescending(x => x.Timestamp).First());
+        }
+
 
         private string ExportToCsv(IEnumerable<SensorData> messages)
         {
