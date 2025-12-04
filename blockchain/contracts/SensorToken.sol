@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract SensorToken is ERC20, Ownable {
-    constructor() ERC20("Sensor Token", "ST") {}
+    constructor() ERC20("Sensor Token", "ST") Ownable(msg.sender) {}
 
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);

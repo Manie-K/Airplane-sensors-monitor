@@ -83,7 +83,7 @@ namespace AirplaneSensorsMonitor.Services
                     await dataService.SaveDataAsync(sensorMessage);
                     await sensorTokenService.RewardSensorAsync(sensorMessage.SensorId, _rewardAmount);
 
-                    _logger.LogInformation($"Received {sensorMessage.SensorType} ({sensorMessage.SensorId}) = {sensorMessage.Value}");
+                    //_logger.LogInformation($"Received {sensorMessage.SensorType} ({sensorMessage.SensorId}) = {sensorMessage.Value}");
 
                     await _hubContext.Clients.All.SendAsync("ReceiveSensorData", sensorMessage);
                     await _hubContext.Clients.All.SendAsync("ReceiveSensorSummary", sensorService.GetSensorSummaries().ToList());

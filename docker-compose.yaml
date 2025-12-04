@@ -16,7 +16,8 @@ services:
       Blockchain__RpcUrl: http://blockchain:8545
       Blockchain__PrivateKey: 0xc87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3
       Blockchain__ContractAddress: 0x8CdaF0CD259887258Bc13a92C0a6dA92698644C0
-      Blochchain__PathToAbi: /app/blockchain/contract/SensorToken.abi
+      Blockchain__PathToAbi: /app/blockchain/SensorToken.abi
+      Blockchain__PathToBin: /app/blockchain/SensorToken.bin
     ports:
       - "8080:8080"
     depends_on:
@@ -50,7 +51,7 @@ services:
     container_name: ganache
     ports:
       - "8545:8545"
-    command: --wallet.mnemonic "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat" --wallet.totalAccounts 1
+    command: --wallet.mnemonic "candy maple cake sugar pudding cream honey rich smooth crumble sweet treat" --wallet.totalAccounts 10
     depends_on:
       - mongo
       - mosquitto
