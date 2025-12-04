@@ -40,7 +40,15 @@ namespace AirplaneSensorsMonitor.Pages
             bool? sortValueDesc = SortBy == "ValueDesc" ? true : SortBy == "ValueAsc" ? false : null;
             bool? sortTimeDesc = SortBy == "TimeDesc" ? true : SortBy == "TimeAsc" ? false : null;
 
-            SensorData = _sensorService.GetSensorData(SensorId, SensorType, sortValueDesc, sortTimeDesc).Take(500).ToList();
+            if (Paused)
+            {
+                SensorData = _sensorService.GetSensorData(SensorId, SensorType, sortValueDesc, sortTimeDesc, StartDate, EndDate).Take(200).ToList();
+            }
+            else
+            {
+                SensorData = new List<SensorData>();
+            }
+
             SensorSummaries = _sensorService.GetSensorSummaries(SensorId, SensorType, sortValueDesc, sortTimeDesc, StartDate, EndDate);
         }
     }

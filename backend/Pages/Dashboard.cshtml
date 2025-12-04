@@ -137,20 +137,27 @@
         var pauseButton = document.getElementById("pauseButton");
         pauseButton.innerText = paused ? "Resume" : "Pause";
 
-        pauseButton.addEventListener("click", function (e) {
-            e.preventDefault();
-            paused = !paused;
+        var initialLabels = [
+            @for (int i = 0; i < Model.SensorData.Count(); i++)
+            {
+                var item = Model.SensorData.ElementAt(i);
+                @: "@item.Timestamp.ToString("HH:mm:ss")"@((i < Model.SensorData.Count() - 1) ? "," : "")
+            }
+        ].reverse();
 
-            pauseInput.value = paused.toString();
-
-            this.innerText = paused ? "Resume" : "Pause";
-        });
+        var initialValues = [
+            @for (int i = 0; i < Model.SensorData.Count(); i++)
+            {
+                var item = Model.SensorData.ElementAt(i);
+                @: @item.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)@((i < Model.SensorData.Count() - 1) ? "," : "")
+            }
+        ].reverse();
 
         var ctx = document.getElementById("sensorChart");
         var myLineChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: [], // Time labels
+                labels: initialLabels, // Time labels
                 datasets: [{
                     label: "Sensor Value",
                     lineTension: 0.3,
@@ -164,7 +171,7 @@
                     pointHoverBorderColor: "rgba(78, 115, 223, 1)",
                     pointHitRadius: 10,
                     pointBorderWidth: 2,
-                    data: [], // Data points
+                    data: initialValues, // Data points
                 }],
             },
             options: {
@@ -199,6 +206,27 @@
             }
         });
 
+        pauseButton.addEventListener("click", function (e) {
+            e.preventDefault();
+            paused = !paused;
+
+            pauseInput.value = paused.toString();
+
+            this.innerText = paused ? "Resume" : "Pause";
+
+            if (paused) {
+                // W trybie pauzy: wypełnij wykres danymi z pamięci (filtr)
+                myLineChart.data.labels = pausedDataLabels.slice(); // kopiowanie tablicy
+                myLineChart.data.datasets[0].data = pausedDataValues.slice();
+                myLineChart.update();
+            } else {
+                // Wznów live update: wyczyść wykres lub zostaw ostatnie punkty
+                myLineChart.data.labels = [];
+                myLineChart.data.datasets[0].data = [];
+                myLineChart.update();
+            }
+        });
+
         var connection = new signalR.HubConnectionBuilder().withUrl("/sensorDataHub").build();
 
         connection.on("ReceiveSensorData", function (data) {
@@ -228,7 +256,7 @@
             myLineChart.data.labels.push(now);
             myLineChart.data.datasets[0].data.push(data.value);
 
-            if (myLineChart.data.labels.length > 20) {
+            if (myLineChart.data.labels.length > 200) {
                 myLineChart.data.labels.shift();
                 myLineChart.data.datasets[0].data.shift();
             }
