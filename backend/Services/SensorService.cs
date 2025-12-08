@@ -15,15 +15,15 @@ namespace AirplaneSensorsMonitor.Services
         }
 
         ///<inheritdoc/>
-        public IEnumerable<SensorData> GetSensorData(int? sensorId = null, string? sensorType = null, bool sortValueDescending = false, bool sortTimestampDescending = true)
+        public IEnumerable<SensorData> GetSensorData(int? sensorId = null, string? sensorType = null, bool? sortValueDescending = null, bool? sortTimestampDescending = null, DateTime? startDate = null, DateTime? endDate = null)
         {
-            return _dataService.GetAllData(sensorId, sensorType, sortValueDescending, sortTimestampDescending);
+            return _dataService.GetAllData(sensorId, sensorType, sortValueDescending, sortTimestampDescending, startDate, endDate);
         }
 
         ///<inheritdoc/>
-        public string ExportSensorData(string format, int? sensorId = null, string? sensorType = null, bool sortValueDescending = false, bool sortTimestampDescending = true)
+        public string ExportSensorData(string format, int? sensorId = null, string? sensorType = null, bool? sortValueDescending = null, bool? sortTimestampDescending = null, DateTime? startDate = null, DateTime? endDate = null)
         {
-            var data = _dataService.GetAllData(sensorId, sensorType, sortValueDescending, sortTimestampDescending);
+            var data = _dataService.GetAllData(sensorId, sensorType, sortValueDescending, sortTimestampDescending, startDate, endDate);
 
             return format.ToLower() switch
             {
@@ -34,9 +34,9 @@ namespace AirplaneSensorsMonitor.Services
         }
 
         ///<inheritdoc/>
-        public IEnumerable<SensorSummary> GetSensorSummaries(int rowsPerSensorCount = 100)
+        public IEnumerable<SensorSummary> GetSensorSummaries(int? sensorId = null, string? sensorType = null, bool? sortValueDescending = null, bool? sortTimestampDescending = null, DateTime? startDate = null, DateTime? endDate = null, int rowsPerSensorCount = 100)
         {
-            var allData = _dataService.GetAllData();
+            var allData = _dataService.GetAllData(sensorId, sensorType, sortValueDescending, sortTimestampDescending, startDate, endDate);
 
             var summaries = allData
                 .GroupBy(m => m.SensorId)
@@ -56,6 +56,15 @@ namespace AirplaneSensorsMonitor.Services
                 });
 
             return summaries;
+        }
+
+        public IEnumerable<SensorData> GetAvailableSensors()
+        {
+            var allData = _dataService.GetAllData();
+
+            return allData
+                .GroupBy(s => s.SensorId)
+                .Select(g => g.OrderByDescending(x => x.Timestamp).First());
         }
 
 

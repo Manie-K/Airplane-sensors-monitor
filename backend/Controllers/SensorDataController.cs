@@ -16,14 +16,14 @@ namespace AirplaneSensorsMonitor.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetSensorData(int? sensorId = null, string ? sensorType = null, bool sortValueDescending = false, bool sortTimestampDescending = false)
+        public IActionResult GetSensorData(int? sensorId = null, string ? sensorType = null, bool? sortValueDescending = null, bool? sortTimestampDescending = null)
         {
             var data = _sensorDataService.GetSensorData(sensorId, sensorType, sortValueDescending, sortTimestampDescending);
             return Ok(data);
         }
 
         [HttpGet("export")]
-        public IActionResult ExportSensorData(string format, int? sensorId = null, string? sensorType = null, bool sortValueDescending = false, bool sortTimestampDescending = false)
+        public IActionResult ExportSensorData(string format, int? sensorId = null, string? sensorType = null, bool? sortValueDescending = null, bool? sortTimestampDescending = null)
         {
             var content = _sensorDataService.ExportSensorData(format, sensorId, sensorType, sortValueDescending, sortTimestampDescending);
             var contentType = format == "json" ? "application/json" : "text/csv";

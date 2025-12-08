@@ -16,4 +16,5 @@ RUN dotnet publish AirplaneSensorsMonitor.csproj -c Release -o /app/publish /p:U
 FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .
+COPY blockchain /app/blockchain
 ENTRYPOINT ["dotnet", "AirplaneSensorsMonitor.dll"]

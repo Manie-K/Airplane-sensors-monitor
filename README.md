@@ -2,6 +2,25 @@
 
 Demonstration project showcasing an end-to-end IoT data flow: generator → MQTT broker → ASP.NET Core backend → MongoDB → Razor Pages UI with tables, filters, and SignalR updates.
 
+## Development Workflow
+
+This project utilizes the **Docker Compose Override** pattern to provide a seamless local development experience with hot-reloading, eliminating the need to install the .NET SDK on your host machine.
+
+When you run `docker compose up`, Docker automatically merges `docker-compose.yaml` (Production configuration) with `docker-compose.override.yaml` (Development configuration).
+
+### Port Configuration
+To distinguish between environments and avoid caching issues, the application runs on different ports depending on the mode:
+
+### Running the Production Build Locally
+
+If you want to test the actual production build (e.g., to verify the final Docker image size or startup behavior) without the development tools, you must explicitly ignore the override file:
+
+```
+docker compose -f docker-compose.yaml up --build
+```
+
+or you can delete the `docker-compose.override.yaml`.
+
 ## Running with Docker
 
 Requiremes Docker Desktop or any compatible engine and `docker compose`.

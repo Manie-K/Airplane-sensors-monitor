@@ -12,7 +12,7 @@ namespace AirplaneSensorsMonitor.Services
         /// <param name="sortValueDescending"></param>
         /// <param name="sortTimestampDescending"></param>
         /// <returns></returns>
-        public IEnumerable<SensorData> GetSensorData(int? sensorId = null, string ? sensorType = null, bool sortValueDescending = false, bool sortTimestampDescending = true);
+        public IEnumerable<SensorData> GetSensorData(int? sensorId = null, string ? sensorType = null, bool? sortValueDescending = null, bool? sortTimestampDescending = null, DateTime? startDate = null, DateTime? endDate = null);
 
         /// <summary>
         /// 
@@ -23,13 +23,15 @@ namespace AirplaneSensorsMonitor.Services
         /// <param name="sortValueDescending"></param>
         /// <param name="sortTimestampDescending"></param>
         /// <returns></returns>
-        public string ExportSensorData(string format, int? sensorId = null, string? sensorType = null, bool sortValueDescending = false, bool sortTimestampDescending = true);
+        public string ExportSensorData(string format, int? sensorId = null, string? sensorType = null, bool? sortValueDescending = null, bool? sortTimestampDescending = null, DateTime? startDate = null, DateTime? endDate = null);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="rowsPerSensorCount"></param>
         /// <returns></returns>
-        public IEnumerable<SensorSummary> GetSensorSummaries(int rowsPerSensorCount = 100);
+        public IEnumerable<SensorSummary> GetSensorSummaries(int? sensorId = null, string? sensorType = null, bool? sortValueDescending = null, bool? sortTimestampDescending = null, DateTime? startDate = null, DateTime? endDate = null, int rowsPerSensorCount = 100);
+
+        public IEnumerable<SensorData> GetAvailableSensors();
     }
 }
