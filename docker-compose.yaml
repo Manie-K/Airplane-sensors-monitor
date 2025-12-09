@@ -71,7 +71,7 @@ services:
       SENSOR_ID: "1"
       SENSOR_TYPE: CO2
     deploy:
-      replicas: 1
+      replicas: 4
     depends_on:
       - backend
 
@@ -89,7 +89,7 @@ services:
       SENSOR_ID: "1"
       SENSOR_TYPE: TEMPERATURE
     deploy:
-      replicas: 1
+      replicas: 4
     depends_on:
       - backend
 
@@ -107,7 +107,7 @@ services:
       SENSOR_ID: "1"
       SENSOR_TYPE: PRESSURE
     deploy:
-      replicas: 1
+      replicas: 4
     depends_on:
       - backend
 
@@ -125,7 +125,7 @@ services:
       SENSOR_ID: "1"
       SENSOR_TYPE: HUMIDITY
     deploy:
-      replicas: 1
+      replicas: 4
     depends_on:
       - backend
 

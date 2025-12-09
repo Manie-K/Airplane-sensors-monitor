@@ -238,7 +238,7 @@
 
             var dataDate = new Date(data.timestamp);
 
-            if ((sensorTypeFilter && data.sensorType !== sensorTypeFilter) ||
+            if ((sensorTypeFilter && !data.sensorType.toLowerCase().includes(sensorTypeFilter.toLowerCase())) ||
                 (sensorIdFilter && data.sensorId != sensorIdFilter) ||
                 (startDateFilter && dataDate < new Date(startDateFilter)) ||
                 (endDateFilter && dataDate > new Date(endDateFilter + "T23:59:59"))) {

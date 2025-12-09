@@ -58,7 +58,7 @@ namespace AirplaneSensorsMonitor.Services
                 filters.Add(filterBuilder.Eq(x => x.SensorId, sensorId.Value));
 
             if (!string.IsNullOrWhiteSpace(sensorType))
-                filters.Add(filterBuilder.Eq(x => x.SensorType, sensorType));
+                filters.Add(filterBuilder.Regex(x => x.SensorType, new MongoDB.Bson.BsonRegularExpression(System.Text.RegularExpressions.Regex.Escape(sensorType), "i")));
 
             if (startDate.HasValue)
                 filters.Add(filterBuilder.Gte(x => x.Timestamp, startDate.Value));
