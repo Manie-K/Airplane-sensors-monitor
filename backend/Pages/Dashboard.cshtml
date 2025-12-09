@@ -248,11 +248,13 @@
             var table = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
             var row = table.insertRow(0);
             var date = new Date(data.timestamp);
-            row.innerHTML = `<td>${date.toLocaleString()}</td><td>${data.sensorType}</td><td>${data.sensorId}</td><td>${data.value.toFixed(2)}</td>`;
+            var utc = `${date.getUTCFullYear()}-${(date.getUTCMonth()+1).toString().padStart(2,'0')}-${date.getUTCDate().toString().padStart(2,'0')}
+                        ${date.getUTCHours().toString().padStart(2,'0')}:${date.getUTCMinutes().toString().padStart(2,'0')}:${date.getUTCSeconds().toString().padStart(2,'0')}`;
+            row.innerHTML = `<td>${utc}</td><td>${data.sensorType}</td><td>${data.sensorId}</td><td>${data.value.toFixed(2)}</td>`;
 
             if (table.rows.length > 100) table.deleteRow(100);
 
-            var now = new Date().toLocaleTimeString();
+            var now = new Date().toUTCString();
             myLineChart.data.labels.push(now);
             myLineChart.data.datasets[0].data.push(data.value);
 

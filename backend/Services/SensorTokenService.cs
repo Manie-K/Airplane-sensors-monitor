@@ -97,7 +97,7 @@ namespace AirplaneSensorsMonitor.Services
                     functionInput: new object[] { address, amountWei }
                 );
 
-                Console.WriteLine($"[INFO] Rewarded sensor {sensorId} ({address}) with {amount} tokens. Txn Status: {receipt.Status.Value}");
+                //Console.WriteLine($"[INFO] Rewarded sensor {sensorId} ({address}) with {amount} tokens. Txn Status: {receipt.Status.Value}");
             }
             catch (Exception ex)
             {
